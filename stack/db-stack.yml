@@ -3,11 +3,11 @@ version: '3.5'
 networks: 
     kong-net:
         external:
-            name: kong-local
+            name: kong-network
         
 services: 
-    db:
-        container_name: postgres-db
+    postgresdb:
+        container_name: postgresdb
         image: postgres:9.6
         environment: 
             POSTGRES_USER: kong
