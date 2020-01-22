@@ -10,10 +10,16 @@ just run this command to deploy up `(maybe :V)`:
 sh deploy.sh
 ```
 
-add `down` argument to down:
+### Option
+
+`--down` to down all service
+
+`--no-konga` to not create konga (GUI Admin)
+
+`example`:
 
 ```bash
-sh deploy.sh down
+sh deploy.sh --down
 ```
 
 ### UwU
