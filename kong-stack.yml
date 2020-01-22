@@ -2,7 +2,8 @@ version: '3.5'
 
 networks: 
     kong-net:
-        external: true
+        external:
+            name: kong-local
 
 services:
     kong:

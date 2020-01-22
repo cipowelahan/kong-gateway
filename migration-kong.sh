@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e
 
 echo "Create Migration Kong"
 
-docker run --rm --network kong-net \
+docker run --rm --net kong-local \
     -e KONG_DATABASE="postgres" \
     -e KONG_PG_HOST="db" \
     -e KONG_PG_DATABASE="kong" \

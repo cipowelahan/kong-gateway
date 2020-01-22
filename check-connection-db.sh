@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 conn="check"
 
@@ -6,9 +7,8 @@ echo "Waiting Connection ...."
 
 while [ "$conn" != "accepting" ]
 do
-    conn=$(printf $(docker exec -ti postgres-db pg_isready -U kong | cut -d \- -f 2) -n)
+    conn=$(echo $(docker exec -ti postgres-db pg_isready -U kong | awk '{print $3}' | sed 's/ //g'))
+    sleep 1
 done
 
-echo "Connected To Database..."
-
-sleep 10
+sleep 5
