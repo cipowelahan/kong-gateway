@@ -2,11 +2,9 @@ version: '3.5'
 
 networks: 
     kong-net:
-        name: kong-net
-        ipam: 
-            config: 
-                - subnet: 172.20.10.0/24
-
+        external:
+            name: kong-local
+        
 services: 
     db:
         container_name: postgres-db
