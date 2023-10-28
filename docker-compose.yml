@@ -1,0 +1,98 @@
+version: '3'
+
+services:
+  kong-db:
+    image: postgres:9.6
+    container_name: kong-db
+    restart: always
+    environment:
+      - POSTGRES_DB=${KONG_PG_DB}
+      - POSTGRES_USER=${KONG_PG_USER}
+      - POSTGRES_PASSWORD=${KONG_PG_PASSWORD}
+    ports:
+      - 9009:5432
+    volumes:
+      - kong_postgres:/var/lib/postgresql/data
+
+  kong-migration:
+    image: kong:3.0-alpine
+    container_name: kong-migration
+    command: ["kong", "migrations", "bootstrap", "--vv"]
+    environment:
+      - KONG_DATABASE=${KONG_DATABASE}
+      - KONG_PG_HOST=${KONG_PG_HOST}
+      - KONG_PG_DATABASE=${KONG_PG_DB}
+      - KONG_PG_USER=${KONG_PG_USER}
+      - KONG_PG_PASSWORD=${KONG_PG_PASSWORD}
+    volumes:
+      - kong_postgres:/var/lib/postgresql/data
+
+  kong-app:
+    image: kong:3.0-alpine
+    container_name: kong-app
+    restart: always
+    command: ["kong", "start", "--vv"]
+    environment:
+      - KONG_DATABASE=${KONG_DATABASE}
+      - KONG_PG_HOST=${KONG_PG_HOST}
+      - KONG_PG_DATABASE=${KONG_PG_DB}
+      - KONG_PG_USER=${KONG_PG_USER}
+      - KONG_PG_PASSWORD=${KONG_PG_PASSWORD}
+      - KONG_PROXY_LISTEN=${KONG_PROXY_LISTEN}
+      - KONG_ADMIN_LISTEN=${KONG_ADMIN_LISTEN}
+      - KONG_PROXY_ACCESS_LOG=${KONG_PROXY_ACCESS_LOG}
+      - KONG_ADMIN_ACCESS_LOG=${KONG_ADMIN_ACCESS_LOG}
+      - KONG_PROXY_ERROR_LOG=${KONG_PROXY_ERROR_LOG}
+      - KONG_ADMIN_ERROR_LOG=${KONG_ADMIN_ERROR_LOG}
+    ports:
+      - 9000:8000
+      - 9003:8443
+      - 9001:8001
+      - 9004:8444
+
+  konga-migration:
+    image: pantsel/konga:latest
+    container_name: konga-migration
+    command: ["-c", "prepare", "-a", "postgres", "-u", "postgresql://${KONG_PG_USER}:${KONG_PG_PASSWORD}@${KONG_PG_HOST}:5432/${KONG_PG_DB}"]
+
+  konga-app:
+    image: pantsel/konga:latest
+    container_name: konga-app
+    restart: always
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - TOKEN_SECRET=${TOKEN_SECRET}
+      - DB_ADAPTER=${KONG_DATABASE}
+      - DB_HOST=${KONG_PG_HOST}
+      - DB_USER=${KONG_PG_USER}
+      - DB_PASSWORD=${KONG_PG_PASSWORD}
+      - DB_DATABASE=${KONG_PG_DB}
+    ports:
+      - 9010:1337
+
+  prometheus-app:
+    image: prom/prometheus:v2.47.2
+    container_name: prometheus-app
+    restart: always
+    ports:
+      - 9015:9090
+    volumes:
+      - ./config/kong-plugin/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana-app:
+    image: grafana/grafana-oss:10.0.0
+    container_name: grafana-app
+    restart: always
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    ports:
+      - 9020:3000
+
+volumes:
+  kong_postgres:
+    external: true
+
+networks:
+  default:
+    external:
+      name: kong_network
